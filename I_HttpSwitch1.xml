@@ -126,8 +126,8 @@
         local lul_switchstatusvalue = luup.variable_get("urn:upnp-org:serviceId:SwitchPower1", "Status", lul_device)
         local newSwitchValue = "0"
         if (lul_switchstatusvalue == "0") then newSwitchValue = "100" end
-				return httpswitch(lul_device, newSwitchValue)
-			</run>
+        return httpswitch(lul_device, newSwitchValue)
+      </run>
     </action>
   </actionList>
 </implementation>
