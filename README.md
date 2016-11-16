@@ -17,6 +17,7 @@ Go to "Develop Apps" feature in your Vera. Choose "Luup files" and upload the I_
 
 ## Creating a device
 You create a device by navigating to the "Devlop Apps" menu item in your Vera. There you choose "Create device" and fill in the following fields (Minimum):
+
 1. Description - The name of your device
 2. Upnp Device Filename - One of the three device files mentioned above, i e D_BinaryLight1.xml
 3. Upnp Implementation Filename - I_HttpSwitch1.xml downloaded from this repository
