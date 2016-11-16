@@ -31,7 +31,7 @@ When the device shows up in your Vera you will find four new variables under adv
 * OffMethod - The HTTP method to be used for the "Off"-request, i e GET or POST
 
 ## Testing
-I use this implemention to integrate some lamps and blind that are "hosted" in an OpenNetHome instance into my Vera Edge. But the implementation should work for any other integration where there is an HTTP/REST API.
+I use this implemention to integrate some lamps and blind that are "hosted" in an [OpenNetHome](https://github.com/NetHome) instance into my Vera Edge. But the implementation should work for many other integration purposes where there is an HTTP/REST API.
 
 ## Limitations and future extensions
-I have not had the need for more complex requests but for instance custom headers or request bodies could be added without to much work. Please let me know if this is of interest to someone.
+I have not had the need for more complex requests but for instance custom headers or request bodies could be added without to much work. Please let me know if this is of interest to someone and please feel free to contribute
