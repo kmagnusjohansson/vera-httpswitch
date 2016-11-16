@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+<implementation>
+  <functions>
+  local http = require("socket.http")
+  local https = require ("ssl.https")
+  local ltn12 = require("ltn12")
+
+  local SID_HTTPSWITCH = "urn:magnus-nu:serviceId:HttpSwitch1"
+
+  local LOG_PREFIX = "HTTPSWITCH: "
+
+  -- Performs the http request and sets status variables
+  function httpswitch(devId, target)
+    local switchValue = "On";
+    local status = "1";
+    if (target == "0") then
+      switchValue = "Off"
+      status = "0"
+    end
+
+    local action_url=luup.variable_get(SID_HTTPSWITCH, switchValue .. "Url", lul_device)
+    local methodname = luup.variable_get(SID_HTTPSWITCH, switchValue .. "Method", lul_device)
+    local response_body = {}
+    local res, c, h = http.request {
+           method = methodname;
+           url = action_url;
+           sink = ltn12.sink.table(response_body);
+    }
+    luup.log(LOG_PREFIX .. "Response: " .. table.concat(response_body))
+
+    luup.variable_set("urn:upnp-org:serviceId:SwitchPower1", "Status", status, devId)
+    luup.variable_set("urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus", tostring(target), devId)
+    luup.log(LOG_PREFIX .. "Switching " .. devId .. " " .. switchValue)
+    return true
+  end
+
+  -- Init variables if not set, make them visible in UI
+  function startup(lul_device)
+    local lul_switchvariablevalue = luup.variable_get("urn:upnp-org:serviceId:SwitchPower1", "Status", lul_device)
+    if (lul_switchvariablevalue == nil) then
+      lul_switchvariablevalue = "0"
+      luup.variable_set("urn:upnp-org:serviceId:SwitchPower1", "Status", lul_switchvariablevalue, lul_device)
+    end
+
+    lul_switchvariablevalue = luup.variable_get(SID_HTTPSWITCH, "OnUrl", lul_device)
+    if (lul_switchvariablevalue == nil) then
+      lul_switchvariablevalue = "http"
+      luup.variable_set(SID_HTTPSWITCH, "OnUrl", lul_switchvariablevalue, lul_device)
+    end
+
+    lul_switchvariablevalue = luup.variable_get(SID_HTTPSWITCH, "OnMethod", lul_device)
+    if (lul_switchvariablevalue == nil) then
+      lul_switchvariablevalue = "GET"
+      luup.variable_set(SID_HTTPSWITCH, "OnMethod", lul_switchvariablevalue, lul_device)
+    end
+
+    lul_switchvariablevalue = luup.variable_get(SID_HTTPSWITCH, "OffUrl", lul_device)
+    if (lul_switchvariablevalue == nil) then
+      lul_switchvariablevalue = "http"
+      luup.variable_set(SID_HTTPSWITCH, "OffUrl", lul_switchvariablevalue, lul_device)
+    end
+
+    lul_switchvariablevalue = luup.variable_get(SID_HTTPSWITCH, "OffMethod", lul_device)
+    if (lul_switchvariablevalue == nil) then
+      lul_switchvariablevalue = "GET"
+      luup.variable_set(SID_HTTPSWITCH, "OffMethod", lul_switchvariablevalue, lul_device)
+    end
+
+    luup.log(LOG_PREFIX .. "Init device:" .. tostring(lul_device))
+  end
+
+  function incoming(data)
+     luup.log(LOG_PREFIX .. "Incoming: " .. data)
+  end
+  </functions>
+  <startup>startup</startup>
+  <incoming>
+    <lua>
+        incoming(tostring(lul_data))
+    </lua>
+  </incoming>
+  <actionList>
+    <action>
+      <serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
+      <name>SetTarget</name>
+      <run>
+        return httpswitch(lul_device, lul_settings.newTargetValue)
+      </run>
+    </action>
+
+    <action>
+      <serviceId>urn:upnp-org:serviceId:Dimming1</serviceId>
+      <name>SetLoadLevelTarget</name>
+      <run>
+        return httpswitch(lul_device, lul_settings.newLoadlevelTarget)
+      </run>
+    </action>
+
+    <action>
+      <serviceId>urn:upnp-org:serviceId:WindowCovering1</serviceId>
+      <name>Up</name>
+      <run>
+        return httpswitch(lul_device, "100")
+      </run>
+    </action>
+    <action>
+      <serviceId>urn:upnp-org:serviceId:WindowCovering1</serviceId>
+      <name>Down</name>
+      <run>
+        return httpswitch(lul_device, "0")
+      </run>
+    </action>
+    <action>
+      <serviceId>urn:upnp-org:serviceId:WindowCovering1</serviceId>
+      <name>Stop</name>
+      <run>
+        luup.log(LOG_PREFIX .. "Stop command called, not implemented")
+      </run>
+    </action>
+
+    <action>
+      <serviceId>urn:micasaverde-com:serviceId:HaDevice1</serviceId>
+      <name>ToggleState</name>
+      <run>
+        -- Support for the toggble of status, handy for a toggle scene
+        local lul_switchstatusvalue = luup.variable_get("urn:upnp-org:serviceId:SwitchPower1", "Status", lul_device)
+        local newSwitchValue = "0"
+        if (lul_switchstatusvalue == "0") then newSwitchValue = "100" end
+				return httpswitch(lul_device, newSwitchValue)
+			</run>
+    </action>
+  </actionList>
+</implementation>
